@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0A0906"/>
+<title>Fennec Wiki</title>
+<link rel="stylesheet" href="wiki.css"/>
+</head>
+<body>
+<div class="topbar">
+  <b>FENNEC</b>
+  <button class="menu-btn" type="button" id="menuBtn">MENU</button>
+</div>
+<div class="shell">
+  <aside id="side">
+    <div class="brand">FENNEC<span>Wiki · v1.0.0 · CiferTech</span></div>
+    <nav>
+      <a href="#home">Introduction</a>
+      <a href="#features">Features</a>
+      <a href="#hardware">Hardware</a>
+      <a href="#flash">Flash</a>
+      <a href="#radio" class="sub">Radio</a>
+      <a href="#sstv" class="sub">SSTV</a>
+      <a href="#morse" class="sub">Morse</a>
+      <a href="#homing" class="sub">Homing</a>
+      <a href="#watch" class="sub">Watch</a>
+      <a href="#settings" class="sub">Settings</a>
+      <a href="#web">Web remote</a>
+      <a href="#serial">Serial</a>
+      <a href="#config">Config</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="aside-links">
+      <a href="https://github.com/cifertech/Fennec">GitHub</a>
+      <a href="FENNEC.txt">Full notes (txt)</a>
+      <a href="TFT_eSPI_User_Setup.h">TFT_eSPI setup</a>
+      <a href="https://cifertech.net/">cifertech.net</a>
+    </div>
+  </aside>
+  <main>
+
+    <article class="page on" id="home">
+      <div class="crumbs">WIKI / INTRODUCTION</div>
+      <h1>Fennec</h1>
+      <p class="lede">All-band AM / FM / SW receive-only radio. ESP32-S3, SI4732-A10, 2.8" ILI9341. CiferTech, MIT, firmware v1.0.0.</p>
+      <p>Fennec is a handheld shortwave-listener radio. Receive only. No transmitter, no CAT control of another rig, and no station-memory scan list.</p>
+      <p>The SI4732-A10 does the RF. The ESP32-S3 runs the UI, the Wi-Fi face, the SSTV picture decoder, Morse copy, the RSSI homing plot, and an event logger. The LCD is the main face. The browser at <code>http://192.168.4.1/</code> is a second face that follows the hardware, and the hardware follows the browser. It is not a button remote.</p>
+      <p>Boot lands on a muted menu. Audio stays off until you open RADIO or a tool that needs the speaker. That avoids the PAM8403 boot pop.</p>
+      <div class="note"><strong>Coverage.</strong> FM 64-108 MHz and AM/SW 153 kHz-27.90 MHz. Airband, NOAA weather, VHF/UHF, and 10 m ham (28 MHz+) are out of range. That's the chip, not a firmware bug.</div>
+      <div class="grid">
+        <a class="card" href="#flash"><h3>Flash</h3><p>Arduino IDE 2.x, core 2.0.10, three libraries, one User_Setup.h paste.</p></a>
+        <a class="card" href="#hardware"><h3>Hardware</h3><p>GPIO map, audio tap for SSTV and Morse, amp mute pin.</p></a>
+        <a class="card" href="#radio"><h3>Faces</h3><p>Radio, SSTV, Morse, Homing, Watch. One exclusive tool at a time.</p></a>
+        <a class="card" href="#faq"><h3>FAQ</h3><p>White LCD, no audio, RMT compile errors, stuck green LED.</p></a>
+      </div>
+    </article>
+
+    <article class="page" id="features">
+      <div class="crumbs">WIKI / FEATURES</div>
+      <h1>Features</h1>
+      <p class="lede">Five doors on the menu. About and Settings live in the corners. Only one decoder or logger runs at a time.</p>
+      <div class="grid">
+        <div class="card"><h3>RADIO</h3><p>FM, AM, shortwave. Seek, RDS, volume. Last place remembered in flash.</p></div>
+        <div class="card"><h3>SSTV</h3><p>Martin, Scottie, Robot 36. VIS auto or lock. Radio tap or mic.</p></div>
+        <div class="card"><h3>MORSE</h3><p>Goertzel copy from the tuner or the capsule. Pitch, USB/LSB, BFO.</p></div>
+        <div class="card"><h3>HOMING</h3><p>RSSI sparkline, about 8 seconds. You walk the antenna. Fennec is the meter.</p></div>
+        <div class="card"><h3>WATCH</h3><p>Park on a channel, ARM it, log when the carrier holds. 32 events in flash.</p></div>
+        <div class="card"><h3>WEB</h3><p>SSID Fennec. Phone and LCD stay in sync. Optional home Wi-Fi for NTP.</p></div>
+      </div>
+      <p>The RADIO face is AM/FM listening. USB/LSB is loaded when SSTV, Morse, or Watch need it. It is not a general SSB mode on RADIO.</p>
+      <p>There is hardware seek. There is no band-scan face and no station memory list. Those were removed on purpose.</p>
+    </article>
+
+    <article class="page" id="hardware">
+      <div class="crumbs">WIKI / HARDWARE</div>
+      <h1>Hardware</h1>
+      <p class="lede">ESP32-S3 in the same touch-bus style as ESP32-DIV. Developed against Arduino-ESP32 core 2.0.10. Do not treat this as a 3.x project.</p>
+      <h2>Core</h2>
+      <ul>
+        <li><strong>ESP32-S3</strong> - UI, Wi-Fi AP, decoders, I2S mic</li>
+        <li><strong>SI4732-A10</strong> - AM / FM / SW tuner (I2C). Probes 0x11 and 0x63 (SEN to GND or 3.3 V)</li>
+        <li><strong>ILI9341 2.8"</strong> - 240x320 portrait, rotation 2</li>
+        <li><strong>XPT2046</strong> - touch on its own SPI bus, not shared with the TFT</li>
+        <li><strong>PAM8403</strong> - class-D amp. Mute GPIO 7 before analog outs power up</li>
+        <li><strong>I2S MEMS mic</strong> - INMP441 / SPH0645 class, 16 kHz averaged down to 8 kHz</li>
+        <li><strong>3x WS2812</strong> on GPIO 38. Hue is locked to orange</li>
+        <li><strong>3x tactile buttons</strong> - UP / OK / DOWN, active-LOW with internal pull-ups</li>
+      </ul>
+      <h2>GPIO map</h2>
+      <p>Edit <code>Pins.h</code> if your PCB is different. TFT SPI pins must also match <a href="TFT_eSPI_User_Setup.h">TFT_eSPI_User_Setup.h</a>.</p>
+      <table>
+        <tr><th>Function</th><th>GPIO</th><th>Notes</th></tr>
+        <tr><td>I2C SDA / SCL</td><td>8 / 9</td><td>4.7k pull-ups to 3.3 V</td></tr>
+        <tr><td>SI4732 reset</td><td>10</td><td></td></tr>
+        <tr><td>TFT MOSI / SCLK / MISO</td><td>11 / 12 / 13</td><td>FSPI</td></tr>
+        <tr><td>TFT CS / DC / RST / BL</td><td>14 / 21 / 47 / 48</td><td>Backlight PWM, never 0%</td></tr>
+        <tr><td>Touch MOSI / MISO / CLK / CS</td><td>35 / 37 / 36 / 18</td><td>Own SPI</td></tr>
+        <tr><td>Buttons UP / OK / DOWN</td><td>6 / 5 / 4</td><td>Tune / band / vol</td></tr>
+        <tr><td>Amp shutdown</td><td>7</td><td>LOW at boot = muted</td></tr>
+        <tr><td>Mic BCLK / WS / DATA</td><td>40 / 41 / 42</td><td>I2S</td></tr>
+        <tr><td>NeoPixel</td><td>38</td><td>3 LEDs</td></tr>
+        <tr><td>SSTV / CW ADC</td><td>1</td><td>LOUT via cap + mid-bias</td></tr>
+      </table>
+      <h2>Audio tap (required for SSTV and Morse from the radio)</h2>
+      <p>SI4732 LOUT -&gt; 1 uF capacitor -&gt; GPIO 1 (ADC). Two 100 kOhm resistors as a mid-rail bias, one to 3.3 V, one to GND.</p>
+      <p>Without this wire, RADIO still plays through the PAM8403, Homing still works from RSSI, and Watch can still log RSSI. SSTV and Morse from the radio will have nothing to decode. You can still feed those tools from the MEMS mic.</p>
+      <p>Speaker path: SI4732 LOUT/ROUT through DC-blocking caps into the PAM8403. Keep the amp shutdown pin under firmware control.</p>
+      <h2>Buttons</h2>
+      <p>Touch is primary. Three buttons are the fallback.</p>
+      <table>
+        <tr><th></th><th>Short</th><th>Hold (~0.7 s)</th></tr>
+        <tr><td>UP (GPIO 6)</td><td>Tune up</td><td>Volume up</td></tr>
+        <tr><td>OK (GPIO 5)</td><td>Next band</td><td>Seek</td></tr>
+        <tr><td>DOWN (GPIO 4)</td><td>Tune down</td><td>Volume down</td></tr>
+      </table>
+      <p>In a tool: tune is 1 kHz steps, OK flips USB/LSB (or PEAK on Homing), long OK goes back. Hold UP+DOWN from any face to return to the menu. There is no rotary encoder.</p>
+    </article>
+
+    <article class="page" id="flash">
+      <div class="crumbs">WIKI / FLASH</div>
+      <h1>Flash with Arduino IDE</h1>
+      <p class="lede">The sketch folder must be named <code>Fennec</code>. Stay on Arduino-ESP32 2.0.10. Core 3.x breaks the NeoPixel RMT code.</p>
+      <ol>
+        <li>Install <a href="https://www.arduino.cc/en/software">Arduino IDE 2.x</a>.</li>
+        <li>Boards Manager: add <code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code> if needed, then install <strong>esp32</strong> by Espressif. Use <strong>2.0.10</strong> if you can.</li>
+        <li>Tools -&gt; Board -&gt; <strong>ESP32S3 Dev Module</strong>.</li>
+        <li>Sketch -&gt; Include Library -&gt; Manage Libraries, install:
+          <ul>
+            <li><a href="https://github.com/pu2clr/SI4735">PU2CLR SI4735</a> (Ricardo Caratti)</li>
+            <li><a href="https://github.com/Bodmer/TFT_eSPI">TFT_eSPI</a> (Bodmer)</li>
+            <li><a href="https://github.com/PaulStoffregen/XPT2046_Touchscreen">XPT2046_Touchscreen</a> (Paul Stoffregen)</li>
+          </ul>
+        </li>
+        <li>Copy <a href="TFT_eSPI_User_Setup.h">TFT_eSPI_User_Setup.h</a> over <code>Documents/Arduino/libraries/TFT_eSPI/User_Setup.h</code>. The sketch does not include that file. TFT_eSPI reads it from its own library folder. Paste it by hand once.</li>
+        <li>Open <code>Fennec.ino</code> and click Upload.</li>
+      </ol>
+      <h2>Suggested Tools menu</h2>
+      <table>
+        <tr><th>Setting</th><th>Value</th></tr>
+        <tr><td>USB CDC On Boot</td><td>Disabled for CP2102/CH340. Enabled for native USB-C</td></tr>
+        <tr><td>Flash Size</td><td>Match your module (8MB is common)</td></tr>
+        <tr><td>PSRAM</td><td>QSPI (N8R2) or OPI (N8R8). SSTV likes PSRAM for the web BMP</td></tr>
+        <tr><td>Upload Speed</td><td>921600</td></tr>
+      </table>
+      <div class="note"><strong>No tuner yet?</strong> Set <code>FENNEC_SIMULATE_RADIO</code> to <code>1</code> in <code>Config.h</code> to exercise the UI and web page with no SI4732 attached.</div>
+      <h2>First boot</h2>
+      <ul>
+        <li>Hold OK while resetting, or send <code>c</code> on serial, to calibrate touch.</li>
+        <li>Join Wi-Fi SSID <strong>Fennec</strong> and open <code>http://192.168.4.1/</code>.</li>
+        <li>Serial at 115200. Send <code>?</code> for commands.</li>
+      </ul>
+    </article>
+
+    <article class="page" id="radio">
+      <div class="crumbs">WIKI / FACES / RADIO</div>
+      <h1>Radio</h1>
+      <p class="lede">FM, AM, shortwave. The chip's whole analog world, from long wave up through the broadcast bands, amateur stretches, and CB. Not airband. Not weather radio. Not VHF.</p>
+      <p>Tap FM, AM, or SW. The chips under the tabs are shortcuts: a full span, or Japan FM, or forty-nine meters. The big number is where you are. SEEK hunts a station. MUTE is a finger on the speaker. Volume lives on the bottom row.</p>
+      <p>Last place you were is remembered. Open RADIO tomorrow and you are still there.</p>
+      <table>
+        <tr><th>Kind</th><th>Chips</th></tr>
+        <tr><td>FM</td><td>FULL, OIRT, Japan, ITU. Units are 10 kHz (6400-10800)</td></tr>
+        <tr><td>AM</td><td>FULL, LW, MW. MW step 9 kHz default, set 10 for the Americas</td></tr>
+        <tr><td>SW</td><td>FULL 1.71-27.9 MHz, meter bands, CB</td></tr>
+      </table>
+      <p>RADIO is AM/FM listening, not general SSB. The SSB patch loads when SSTV, Morse, or Watch need USB/LSB.</p>
+    </article>
+
+    <article class="page" id="sstv">
+      <div class="crumbs">WIKI / FACES / SSTV</div>
+      <h1>SSTV</h1>
+      <p class="lede">Shortwave still sends pictures. Slow-scan. A tone that paints a line, then another, until a face or a schematic is sitting on the glass.</p>
+      <p>Open SSTV. Fennec goes USB or LSB, listens for the VIS, and draws as the lines arrive. Martin M1/M2, Scottie S1/S2, Robot 36. Leave it on AUTO, or lock a mode if you already know the handshake.</p>
+      <p>Calling frequencies are on the keys:</p>
+      <table>
+        <tr><th>Band</th><th>kHz</th><th>Sideband</th></tr>
+        <tr><td>80 m</td><td>3733</td><td>LSB</td></tr>
+        <tr><td>40 m</td><td>7171</td><td>LSB</td></tr>
+        <tr><td>20 m</td><td>14230</td><td>USB</td></tr>
+        <tr><td>15 m</td><td>21340</td><td>USB</td></tr>
+      </table>
+      <p>RADIO listens through the tuner. MIC listens through the capsule. Hold a speaker to the mic if you must, and the amplifier goes quiet so Fennec does not copy itself. Nudge BFO until the picture locks. RESET if the image goes wrong. Walk away and come back: the picture is still there.</p>
+      <p>Needs the GPIO 1 audio tap, or MIC. Web BMP is at <code>/api/sstv.bmp</code>. Picture size is load-bearing. Don't casually change <code>kSstvPic</code>.</p>
+    </article>
+
+    <article class="page" id="morse">
+      <div class="crumbs">WIKI / FACES / MORSE</div>
+      <h1>Morse</h1>
+      <p class="lede">Dits and dahs on the air, and Fennec writes them down. A listener's copy, not a contest machine.</p>
+      <p>Open MORSE. Set the pitch to the tone you hear. That is PIT. Sideband with USB and LSB. BFO if the note sits off-center.</p>
+      <p>RADIO copies from the tuner. MIC copies from the capsule. The speaker mutes so the box does not hear itself. Hold the phone close. Echo is the enemy. Gaps fill, letters glue.</p>
+      <p>The first word waits a breath. Fennec is learning how fast they are sending. Then the text starts to run. Fifteen to thirty words a minute is the neighborhood.</p>
+      <p>Goertzel, 400-1200 Hz, 4 ms blocks. Pitch has to match the tone. Not reliable at QRQ or with a noisy speaker across the room.</p>
+    </article>
+
+    <article class="page" id="homing">
+      <div class="crumbs">WIKI / FACES / HOMING</div>
+      <h1>Homing</h1>
+      <p class="lede">You are not getting a compass bearing. You are getting a peak.</p>
+      <p>Open HOMING. A line crawls across the screen, about eight seconds of signal strength. The orange LEDs breathe with it. Walk. Turn the beam. When the trace climbs and the lights quicken, you are looking at the transmitter.</p>
+      <p>Tap PEAK to mark the high water and hunt again. A whip standing straight up will not point. You need a direction. You are the motor. Fennec is the meter.</p>
+      <p>RSSI sparkline only. Not Adcock, Doppler, or compass. No sidetone. ESP32-S3 has no DAC. You hear the radio, or nothing on MIC.</p>
+    </article>
+
+    <article class="page" id="watch">
+      <div class="crumbs">WIKI / FACES / WATCH</div>
+      <h1>Watch</h1>
+      <p class="lede">Some signals do not talk. They just appear.</p>
+      <p>Open WATCH. Park on a frequency: UVB-76, a known USB marker, or HERE, wherever you already sit. ARM it. When the carrier holds above the threshold, Fennec writes an event: time, frequency, how strong it got. Up to thirty-two of them, kept in flash.</p>
+      <p>Raise or lower the threshold. Clear the list when the night is done. This is a log for a shortwave listener, not a decoder of voices, and not a tool for anything that is not yours to hear.</p>
+      <table>
+        <tr><th>Preset</th><th>kHz</th><th>Mode</th></tr>
+        <tr><td>4625</td><td>4625</td><td>AM</td></tr>
+        <tr><td>5448</td><td>5448</td><td>USB</td></tr>
+        <tr><td>6925</td><td>6925</td><td>USB</td></tr>
+        <tr><td>9074</td><td>9074</td><td>USB</td></tr>
+        <tr><td>HERE</td><td>current</td><td>stay put</td></tr>
+      </table>
+      <p>Serial <code>d</code> dumps JSON. Events live in the same NVS namespace as band and volume.</p>
+    </article>
+
+    <article class="page" id="settings">
+      <div class="crumbs">WIKI / FACES / SETTINGS</div>
+      <h1>Menu, About, Settings</h1>
+      <p>Power on, and Fennec does not shout. One orange blink. The CiferTech mark on black sand. Then a quiet menu. Five tiles: RADIO, SSTV, MORSE, HOMING, WATCH. About and Settings live in the corners. Tap a tile when you are ready.</p>
+      <h2>About</h2>
+      <p>Who built it. What board. What chip. A mail, a GitHub, a site. Tap anywhere to go back.</p>
+      <h2>Settings</h2>
+      <p>Four taps. Wi-Fi access point on or off. When it is on, the address sits under the list. PIXEL, the three orange LEDs. BRIGHT, twenty percent at a time, never dark enough to lose the menu. TOUCH, if the glass and the finger disagree, or hold OK while it boots and walk the crosses.</p>
+      <p>Brightness 20-100, step 20. Hold OK at boot to calibrate. A short lock after Settings taps eats bounce so the page does not flicker.</p>
+    </article>
+
+    <article class="page" id="web">
+      <div class="crumbs">WIKI / WEB REMOTE</div>
+      <h1>Web remote</h1>
+      <p class="lede">Same radio. Second glass.</p>
+      <p>Join the network named <strong>Fennec</strong>. Open a browser to <code>http://192.168.4.1/</code>. What you see is what the box is doing. Change a tab on the phone, and the LCD follows. Change the LCD, and the page follows.</p>
+      <p>RADIO on the web is the live tuner, speaker up, not the silent boot menu. SSTV shows the picture as it paints. Morse, homing, watch: the same tools, in your hand, across the room.</p>
+      <p>If you have a home network in the firmware, Fennec can join it too, take time from the internet, and put a clock in the header.</p>
+      <p>Set <code>FENNEC_WIFI_AP_PASS</code> (8+ characters) to encrypt the AP. Only one exclusive tool at a time, shared with the LCD.</p>
+      <h2>HTTP</h2>
+      <table>
+        <tr><th>Path</th><th></th></tr>
+        <tr><td><code>GET /</code></td><td>tuner page</td></tr>
+        <tr><td><code>/api/status</code></td><td>JSON snapshot of the live face</td></tr>
+        <tr><td><code>/api/tune</code></td><td><code>?dir=1</code> or <code>?f=103.5</code> or <code>?f=6075</code></td></tr>
+        <tr><td><code>/api/band</code></td><td><code>?dir=1</code> or <code>?id=</code> or <code>?kind=</code> (0=FM 1=AM 2=SW)</td></tr>
+        <tr><td><code>/api/seek</code></td><td><code>?dir=1</code></td></tr>
+        <tr><td><code>/api/volume</code></td><td><code>?dir=1</code> or <code>?v=40</code> (0-63)</td></tr>
+        <tr><td><code>/api/mute</code></td><td>mute</td></tr>
+        <tr><td><code>/api/sstv</code></td><td>reset, mic=0/1, lock</td></tr>
+        <tr><td><code>GET /api/sstv.bmp</code></td><td>live picture</td></tr>
+        <tr><td><code>/api/mode</code></td><td><code>?m=tuner|sstv|cw|hunt|log</code></td></tr>
+        <tr><td><code>/api/usb</code> <code>/api/bfo</code></td><td>sideband and BFO</td></tr>
+        <tr><td><code>/api/cw</code></td><td>pitch or mic</td></tr>
+        <tr><td><code>/api/hunt</code></td><td>peak or JSON history</td></tr>
+        <tr><td><code>/api/log</code></td><td>arm, clr, thr, preset, or events JSON</td></tr>
+      </table>
+    </article>
+
+    <article class="page" id="serial">
+      <div class="crumbs">WIKI / SERIAL</div>
+      <h1>Serial</h1>
+      <p class="lede">115200 baud. Send <code>?</code> for help.</p>
+      <table>
+        <tr><th>Key</th><th></th></tr>
+        <tr><td><code>n</code> / <code>p</code></td><td>next / previous band</td></tr>
+        <tr><td><code>[</code> / <code>]</code></td><td>tune down / up</td></tr>
+        <tr><td><code>s</code></td><td>seek up</td></tr>
+        <tr><td><code>+</code> / <code>-</code></td><td>volume</td></tr>
+        <tr><td><code>m</code></td><td>mute</td></tr>
+        <tr><td><code>t</code></td><td>SSTV toggle</td></tr>
+        <tr><td><code>v</code></td><td>RADIO / MIC on SSTV or Morse</td></tr>
+        <tr><td><code>w</code></td><td>Morse toggle</td></tr>
+        <tr><td><code>h</code></td><td>Homing toggle</td></tr>
+        <tr><td><code>l</code></td><td>Watch toggle</td></tr>
+        <tr><td><code>d</code></td><td>dump Watch log</td></tr>
+        <tr><td><code>c</code></td><td>touch calibration</td></tr>
+        <tr><td><code>i</code></td><td>band / freq / vol / rssi / ip</td></tr>
+      </table>
+    </article>
+
+    <article class="page" id="config">
+      <div class="crumbs">WIKI / CONFIG</div>
+      <h1>Config.h</h1>
+      <p class="lede">Tunables. Pins stay in <code>Pins.h</code>.</p>
+      <table>
+        <tr><th>Define</th><th>What it does</th></tr>
+        <tr><td><code>FENNEC_SIMULATE_RADIO</code></td><td>1 = UI / web without SI4732</td></tr>
+        <tr><td><code>FENNEC_MW_STEP_KHZ</code></td><td>9 or 10</td></tr>
+        <tr><td><code>FENNEC_DEFAULT_VOLUME</code></td><td>0-63</td></tr>
+        <tr><td><code>FENNEC_WIFI_AP_SSID</code> / <code>PASS</code></td><td>soft-AP. Empty pass = open</td></tr>
+        <tr><td><code>FENNEC_WIFI_STA_SSID</code> / <code>PASS</code></td><td>home network. Empty = skip</td></tr>
+        <tr><td><code>FENNEC_TZ</code></td><td>POSIX TZ. Default UTC0. Iran: IRST-3:30</td></tr>
+        <tr><td><code>FENNEC_NEOPIXEL_BRIGHT</code></td><td>0-255, currently 48</td></tr>
+        <tr><td><code>FENNEC_NEOPIXEL_ORDER_GRB</code></td><td>1. If green/red look swapped, try 0</td></tr>
+        <tr><td><code>FENNEC_MIC_SHIFT</code></td><td>I2S 32-bit to int16, default 14</td></tr>
+        <tr><td><code>FENNEC_TOUCH_DEBUG</code></td><td>1 = print raw X/Y/Z</td></tr>
+        <tr><td><code>FENNEC_DEFAULT_BRIGHTNESS</code></td><td>LCD percent</td></tr>
+      </table>
+    </article>
+
+    <article class="page" id="faq">
+      <div class="crumbs">WIKI / FAQ</div>
+      <h1>It doesn't work</h1>
+      <table>
+        <tr><th>Symptom</th><th>Check</th></tr>
+        <tr><td>White LCD</td><td>TFT_eSPI User_Setup.h not copied, or pins don't match Pins.h</td></tr>
+        <tr><td>No touch</td><td>Hold OK at boot to calibrate. Check the touch SPI pins</td></tr>
+        <tr><td>Boot thump</td><td>Amp SD pin polarity (<code>PIN_AMP_SD_ACTIVE_HIGH</code>)</td></tr>
+        <tr><td>One NeoPixel / stuck green</td><td>Need RMT_MEM_128 on core 2.0.10. RMT_MEM_64 is too small for 3 LEDs</td></tr>
+        <tr><td>Compile error on RMT</td><td>You are on Arduino-ESP32 3.x. Stay on 2.0.10</td></tr>
+        <tr><td>SSTV "no audio"</td><td>Missing GPIO 1 tap, or switch to MIC</td></tr>
+        <tr><td>Morse garbage</td><td>PIT vs the tone, too much echo on MIC, first-word wait</td></tr>
+        <tr><td>No AP</td><td>Wi-Fi off in Settings, or <code>FENNEC_WIFI_ENABLE_AP</code> is 0</td></tr>
+        <tr><td>No clock</td><td>STA SSID empty. NTP only after home Wi-Fi joins</td></tr>
+        <tr><td>Sketch not found</td><td>Folder not named Fennec</td></tr>
+      </table>
+      <p>The long form of this list, plus what was intentionally removed, is in <a href="FENNEC.txt">FENNEC.txt</a>.</p>
+      <h2>License</h2>
+      <p>MIT, CiferTech 2026. See <a href="https://github.com/cifertech/Fennec/blob/main/LICENSE.txt">LICENSE.txt</a>.</p>
+      <p>SI4732 programming follows Silicon Labs AN332 via PU2CLR SI4735. The SI4732-A10 SSB patch comes from that library. Don't redistribute Silicon Labs chip firmware as a commercial product.</p>
+      <h2>Contact</h2>
+      <p>CiferTech · <a href="https://twitter.com/techcifer">twitter</a> · <a href="https://github.com/cifertech/Fennec">github.com/cifertech/Fennec</a> · <a href="https://cifertech.net/">cifertech.net</a></p>
+    </article>
+
+    <footer>Fennec Wiki · CiferTech · MIT</footer>
+  </main>
+</div>
+<script>
+const pages = document.querySelectorAll('.page');
+const links = document.querySelectorAll('nav a');
+const side = document.getElementById('side');
+const menuBtn = document.getElementById('menuBtn');
+
+function show(id) {
+  const name = id.replace('#', '') || 'home';
+  let found = false;
+  pages.forEach((p) => {
+    const on = p.id === name;
+    p.classList.toggle('on', on);
+    if (on) found = true;
+  });
+  if (!found) document.getElementById('home').classList.add('on');
+  links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + (found ? name : 'home')));
+  side.classList.remove('open');
+  window.scrollTo(0, 0);
+}
+
+function fromHash() {
+  show(location.hash || '#home');
+}
+
+window.addEventListener('hashchange', fromHash);
+menuBtn.addEventListener('click', () => side.classList.toggle('open'));
+document.querySelectorAll('a[href^="#"]').forEach((a) => {
+  a.addEventListener('click', () => side.classList.remove('open'));
+});
+fromHash();
+</script>
+</body>
+</html>
