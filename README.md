@@ -26,9 +26,11 @@
 
 ## 📖 Explore the Fennec Wiki
 
-Hardware, flash steps, every face, the web API, serial commands, and the "it doesn't work" list live in the [Wiki](https://cifertech.github.io/Fennec/). Same pages are in [`docs/index.html`](docs/index.html) if you are reading this from the repo.
+Hardware, flash steps, every face, the web API, serial commands, and the "it doesn't work" list live in the [Wiki](https://cifertech.github.io/Fennec/). Same pages are in [`docs/index.html`](https://github.com/cifertech/Fennec/blob/main/docs/index.html) if you are reading this from the repo.
 
-Copy [`docs/TFT_eSPI_User_Setup.h`](docs/TFT_eSPI_User_Setup.h) over `Arduino/libraries/TFT_eSPI/User_Setup.h` before you upload.
+Copy [`docs/TFT_eSPI_User_Setup.h`](https://github.com/cifertech/Fennec/blob/main/docs/TFT_eSPI_User_Setup.h) over `Arduino/libraries/TFT_eSPI/User_Setup.h` before you upload.
+
+Firmware, [PCB](https://github.com/cifertech/Fennec/tree/main/PCB), [schematic](https://github.com/cifertech/Fennec/tree/main/Schematic), and a [pre-compiled bin](https://github.com/cifertech/Fennec/tree/main/Pre-compiled%20Bin) are in the [GitHub repo](https://github.com/cifertech/Fennec).
 
 <div>&nbsp;</div>
 
@@ -81,7 +83,7 @@ Stay on **Arduino-ESP32 2.0.10**. Core 3.x breaks the NeoPixel RMT code. Full fl
 
 ## :warning: License
 
-MIT © CiferTech 2026. See [LICENSE.txt](LICENSE.txt).
+MIT © CiferTech 2026. See [LICENSE](https://github.com/cifertech/Fennec/blob/main/LICENSE).
 
 
 ## :handshake: Contact
