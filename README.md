@@ -86,29 +86,24 @@ Stay on **Arduino-ESP32 2.0.10**. Core 3.x breaks the NeoPixel RMT code. Full fl
 
 <div>&nbsp;</div>
 
-## 💬 Support & Contributions
+## License
+MIT © CiferTech 2026. See [LICENSE](https://github.com/cifertech/Fennec/blob/main/LICENSE).
 
+<div>&nbsp;</div>
+
+## Support & Contributions
 - 💬 Found a bug or have a feature request? Open an [Issue](https://github.com/cifertech/Fennec/issues)
 - ⭐ Like the project? Star the repo!
 - 🛠 Want to contribute? Fork it and submit a pull request.
 
-## :warning: License
 
-MIT © CiferTech 2026. See [LICENSE](https://github.com/cifertech/Fennec/blob/main/LICENSE).
-
-
-## :handshake: Contact
-
-▶ Support me on Patreon [patreon.com/cifertech](https://www.patreon.com/cifertech)
-
-CiferTech - [@twitter](https://twitter.com/techcifer) - CiferTech@gmali.com
-
-Project Link: [https://github.com/cifertech/Fennec](https://github.com/cifertech/Fennec)
+## Contact
+- Support me on Patreon [patreon.com/cifertech](https://www.patreon.com/cifertech)
+- CiferTech - [@X](https://twitter.com/techcifer) - CiferTech@gmali.com
+- Project Link: [https://github.com/cifertech/Fennec](https://github.com/cifertech/Fennec)
 
 
-
-## :gem: Acknowledgements
-
+## Acknowledgements
 - [PU2CLR SI4735](https://github.com/pu2clr/SI4735) (Ricardo Caratti)
 - [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) (Bodmer)
 - [XPT2046_Touchscreen](https://github.com/PaulStoffregen/XPT2046_Touchscreen) (Paul Stoffregen)
