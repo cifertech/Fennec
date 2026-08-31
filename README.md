@@ -74,6 +74,17 @@ Stay on **Arduino-ESP32 2.0.10**. Core 3.x breaks the NeoPixel RMT code. Full fl
 
 <div>&nbsp;</div>
 
+## Roadmap / v2 TODO
+
+- [ ] Fix LF33 overheating (move to a separate/buck regulator)
+- [ ] Add audio jack
+- [ ] Add radio transmitter
+- [ ] Add OLED display support
+- [ ] Add SD card slot to the PCB
+- [x] ~~Connect GPIO1 to LOUT~~
+- [x] ~~Connect INMP441 mic's CHIPEN pin (currently floating)~~
+
+<div>&nbsp;</div>
 
 ## 💬 Support & Contributions
 
